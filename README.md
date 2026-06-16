@@ -9,14 +9,9 @@ This repository implements **CauSiam** (Causal Siamese Networks) as a plug-and-p
 ## Paper Information
 
 **Title:** Continual Test-Time Adaptation for Single Image Defocus Deblurring via Causal Siamese Networks
-
-**Authors:** Shuang Cui, Yi Li, Jiangmeng Li, Xiongxin Tang, Bing Su, Fanjiang Xu, Hui Xiong
-
 **Venue:** International Journal of Computer Vision (**IJCV**), 2025
 
 **ArXiv:** [2501.09052](https://arxiv.org/abs/2501.09052)
-
-**Keywords:** Continual test-time adaptation, single image defocus deblurring, causality, vision-language models
 
 ### Abstract (Brief)
 
