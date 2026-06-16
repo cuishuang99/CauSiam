@@ -40,7 +40,7 @@ The test stream follows the CTTA protocol in the paper: **DPDD → RealDOF → L
 
 ### DPDNet-S (Source Model)
 
-**DPDNet-S** is the compact U-Net-style encoder-decoder from [Abuolaim & Brown, 2020](https://github.com/Abdullah-Abuolaim/defocus-deblurring-dual-pixel). In this repo it serves as the **frozen-pretrained source backbone** loaded from `best.pt`, then wrapped by CauSiam at test time.
+**DPDNet-S** is the compact U-Net-style encoder-decoder from [Abuolaim & Brown, 2020](https://github.com/Abdullah-Abuolaim/defocus-deblurring-dual-pixel). The [official release](https://github.com/Abdullah-Abuolaim/defocus-deblurring-dual-pixel) is implemented in **TensorFlow**; we **reimplemented DPDNet-S in PyTorch** for this project and trained it on the DPDD training set. In this repo it serves as the **frozen-pretrained source backbone** loaded via `--resume_model`, then wrapped by CauSiam at test time.
 
 ### CauSiam Pipeline (This Codebase)
 
@@ -110,6 +110,7 @@ dpdnet_clip_vit32_bais-iteration1ci/
 │   └── resume_lr.py
 ├── CLIP/                    # CLIP dependency (ViT-B/32)
 ├── open_clip/               # open_clip (optional / legacy)
+├── checkpoints/             # DPDNet-S weights (download dpdnet-s.pt here)
 └── clip_model/              # CLIP weights (auto-downloaded on first run)
 ```
 
@@ -132,20 +133,34 @@ pip install ftfy regex tqdm   # for CLIP
 
 Install CLIP dependencies as needed by the bundled `CLIP/` module.
 
-### Pretrained Assets
+### Pretrained Weights
 
-| Asset | Purpose | Default path |
-|-------|---------|--------------|
-| DPDNet-S checkpoint | Source model weights | Set via `--resume_model` in `options/dpdd/option.py` |
-| CLIP ViT-B/32 | Semantic prior encoder | Auto-download to `./clip_model/` on first run |
+| Asset | Purpose | How to obtain |
+|-------|---------|---------------|
+| **DPDNet-S** | Source backbone (PyTorch) | [Download dpdnet-s.pt](https://drive.google.com/file/d/1VUjoSZkk-p5R18JegZlPpeJ3J9xDH0EZ/view?usp=sharing) |
+| **CLIP ViT-B/32** | Semantic prior encoder | Auto-downloaded to `./clip_model/` on first run |
 
-**DPDNet-S pretrained model:** train with `train.py`, or use the baseline checkpoint referenced in `options/dpdd/option.py`:
+#### DPDNet-S (`dpdnet-s.pt`)
 
+The original DPDNet-S code from [Abuolaim & Brown, 2020](https://github.com/Abdullah-Abuolaim/defocus-deblurring-dual-pixel) is written in **TensorFlow**. We reimplemented the same architecture in **PyTorch**, trained it on the DPDD training set, and release the checkpoint as `dpdnet-s.pt` (~119 MB).
+
+**Download:** [Google Drive — dpdnet-s.pt](https://drive.google.com/file/d/1VUjoSZkk-p5R18JegZlPpeJ3J9xDH0EZ/view?usp=sharing)
+
+**Setup:**
+
+```bash
+mkdir -p checkpoints
+# Download dpdnet-s.pt into checkpoints/, then run:
+python test_causiam.py --resume_model checkpoints/dpdnet-s.pt
 ```
-/home/csh/Code/TTA_Deblur/Baseline-Source-Method/baseline_dpdnet/exp/dpdd/train-20240411-142057/model_state/best.pt
-```
 
-Update this path to your local checkpoint before running tests.
+Alternatively, update `DEFAULT_RESUME_MODEL` in `options/dpdd/option.py` to your local path.
+
+You can also train your own checkpoint from scratch with `python train.py --save exp/dpdd` (saved to `exp/dpdd/train-YYYYMMDD-HHMMSS/model_state/best.pt`).
+
+#### CLIP ViT-B/32
+
+Loaded automatically by `da_clip.py` via `clip.load("ViT-B/32", download_root="./clip_model/")`. Weights (~338 MB) are cached under `./clip_model/ViT-B-32.pt` on first run. No manual download required.
 
 ---
 
@@ -236,7 +251,7 @@ Key arguments:
 
 | Argument | Default | Description |
 |----------|---------|-------------|
-| `--resume_model` | baseline `best.pt` | DPDNet-S checkpoint |
+| `--resume_model` | `checkpoints/dpdnet-s.pt` | DPDNet-S checkpoint (see [Pretrained Weights](#pretrained-weights)) |
 | `--val_batch_size` | 1 | Batch size (must be 1 for CTTA) |
 | `--dropout_rate` | 0.4 | Dropout in DPDNet-S encoder |
 | `--y_channel` | 0 | 0 = RGB PSNR, 1 = Y-channel PSNR |
