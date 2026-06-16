@@ -72,43 +72,6 @@ Input blur image x
 | Stochastic restore | `da_clip.py` | Random reset of adapted params (CoTTA-style) |
 | CLIP encoder | `da_clip.py` → `clip.load("ViT-B/32")` | Frozen ViT-B/32 image encoder |
 
-### Architecture Diagram
-
-```mermaid
-flowchart TB
-    subgraph Input
-        X[Blurry image x]
-    end
-
-    subgraph SemanticBranch["VSPI – Semantic Prior"]
-        INT[model_int: initial deblur]
-        CLIP[CLIP ViT-B/32 encoder]
-        CTX[Semantic context s]
-        INT --> CLIP --> CTX
-    end
-
-    subgraph SiameseBranch["Siamese Consistency"]
-        EMA[model_ema: EMA teacher]
-        TTA[4× geometric augmentations]
-        MEAN[Augmentation mean]
-        EMA --> TTA --> MEAN
-    end
-
-    subgraph StudentBranch["Online Student"]
-        STU[model: DPDNet-S + CA@conv6]
-        OUT[Deblurred output]
-        STU --> OUT
-    end
-
-    X --> INT
-    X --> TTA
-    X --> STU
-    CTX --> STU
-    MEAN -->|L1 loss| OUT
-    OUT -->|Adam update| STU
-    STU -->|EMA mt=0.9| EMA
-```
-
 ---
 
 ## Project Structure
@@ -147,7 +110,7 @@ dpdnet_clip_vit32_bais-iteration1ci/
 │   └── resume_lr.py
 ├── CLIP/                    # CLIP dependency (ViT-B/32)
 ├── open_clip/               # open_clip (optional / legacy)
-└── clip_model/              # Downloaded CLIP weights (create manually)
+└── clip_model/              # CLIP weights (auto-downloaded on first run)
 ```
 
 ---
@@ -333,18 +296,6 @@ Modify `SNAPSHOT_ROOT` and `DATASET_ROOT` in `test_causiam.py` before running.
 | RTF | 23.578 |
 | Average | 24.676 |
 
-### Reproduction Log (this repo)
-
-From `260616-result-CAUSIAM-DPDNet-Final/test.log`:
-
-| Dataset | PSNR (dB) |
-|---------|-----------|
-| DPDD | 24.8623 |
-| RealDOF | 23.7134 |
-
-Run the full `test_causiam.py` to obtain LFDOF and RTF numbers (~1–2 hours on a single GPU depending on resolution).
-
----
 
 ## Implementation Notes
 
@@ -406,4 +357,3 @@ If you find this work useful, please cite:
 This project builds upon DPDNet-S, CLIP, and CoTTA-style adaptation code. Please refer to the respective licenses of the upstream repositories when distributing or modifying this code.
 
 ---
-
